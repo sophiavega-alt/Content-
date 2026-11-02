@@ -1,0 +1,24 @@
+{
+  "name": "content",
+  "version": "1.0.0",
+  "description": "Video editing toolkit: FFmpeg + HyperFrames + yt-dlp",
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "hf": "hyperframes"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sophiavega-alt/Content-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sophiavega-alt/Content-/issues"
+  },
+  "homepage": "https://github.com/sophiavega-alt/Content-#readme",
+  "devDependencies": {
+    "hyperframes": "^0.9.2"
+  },
+  "private": true
+}
