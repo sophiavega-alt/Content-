@@ -31,6 +31,9 @@ ffmpeg -ss 5 -to 20 -i in.mp4 -c copy clip.mp4
 python3 -c "from faster_whisper import WhisperModel; m=WhisperModel('small', compute_type='int8'); \
 [print(f'{w.start:.2f}-{w.end:.2f} {w.word}') for s in m.transcribe('clip.mp4', word_timestamps=True)[0] for w in s.words]"
 
+# Aesthetic workout montage for TikTok (vertical, warm film grade, auto-picks the reps, 0.5x slow-mo)
+python3 scripts/montage.py downloads/gym/ -o renders/gym_montage.mp4 --title "leg day"
+
 # Captions/graphics composition
 npx hyperframes init my-video && npx hyperframes preview && npx hyperframes render
 ```
