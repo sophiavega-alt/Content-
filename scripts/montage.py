@@ -18,7 +18,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import cv2
 import numpy as np
 
 W, H, FPS = 1080, 1920, 30
@@ -53,37 +52,52 @@ def probe(path):
     }
 
 
-def motion_curve(path, step_s=0.1):
-    """Mean absolute frame difference sampled every step_s seconds (low-res, grayscale)."""
-    cap = cv2.VideoCapture(str(path))
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30
-    stride = max(1, round(fps * step_s))
-    prev, scores, i = None, [], 0
-    while True:
-        ok = cap.grab()
-        if not ok:
-            break
-        if i % stride == 0:
-            ok, frame = cap.retrieve()
-            if not ok:
-                break
-            g = cv2.cvtColor(cv2.resize(frame, (90, 160)), cv2.COLOR_BGR2GRAY).astype(np.float32)
-            scores.append(0.0 if prev is None else float(np.mean(np.abs(g - prev))))
-            prev = g
-        i += 1
-    cap.release()
-    return np.array(scores), stride / fps
+def motion_curve(path, rate=10):
+    """Mean absolute frame difference, sampled `rate` times per second on tiny grayscale frames.
+
+    Decoded by FFmpeg (multithreaded, applies phone rotation); cached next to the scratch output.
+    """
+    cache = Path(tempfile.gettempdir()) / f"motion_{Path(path).stem}_{Path(path).stat().st_size}.npy"
+    if cache.exists():
+        return np.load(cache), 1.0 / rate
+    w, h = 72, 128
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-an", "-vf",
+                          f"fps={rate},scale={w}:{h},format=gray", "-f", "rawvideo", "-"],
+                         capture_output=True).stdout
+    frames = np.frombuffer(raw, np.uint8).reshape(-1, h, w).astype(np.float32)
+    scores = np.concatenate([[0.0], np.abs(np.diff(frames, axis=0)).mean(axis=(1, 2))])
+    np.save(cache, scores)
+    return scores, 1.0 / rate
 
 
-def best_window(scores, step, length, duration, margin=0.4):
-    """Start time of the length-second window with the most motion (skipping start/end handling)."""
-    n = max(1, int(round(length / step)))
-    lo, hi = int(margin / step), len(scores) - n - int(margin / step)
-    if hi <= lo or len(scores) < n:
-        return max(0.0, (duration - length) / 2), float(scores.mean()) if len(scores) else 0.0
-    sums = np.convolve(scores, np.ones(n), "valid")[lo:hi + 1]
-    k = int(np.argmax(sums))
-    return (lo + k) * step, float(sums[k] / n)
+def best_window(scores, step, length, duration, edge=8.0, win=8.0):
+    """Start of a length-second shot in the middle of the clearest run of reps.
+
+    Reps are rhythmic: the motion signal repeats every ~1-5 s. Walking to/from the phone or
+    re-racking is one big burst. So each `win`-second window is scored by how periodic its motion
+    is (autocorrelation peak) times how much is moving, and the first/last `edge` seconds
+    (phone handling) are skipped.
+    """
+    n = len(scores)
+    wn = int(win / step)
+    e = int(min(edge, duration * 0.15) / step)
+    if n < wn + 2 * e + 2:
+        return max(0.0, (duration - length) / 2), float(scores.mean()) if n else 0.0
+    lags = np.arange(int(1.0 / step), int(5.0 / step))
+    best, best_i = -1.0, e
+    for i in range(e, n - e - wn, max(1, int(0.5 / step))):
+        x = scores[i:i + wn]
+        level = float(np.median(x))
+        x = x - x.mean()
+        denom = float((x * x).sum()) or 1.0
+        ac = max(float((x[:-L] * x[L:]).sum()) / denom for L in lags)
+        # penalise windows dominated by one huge burst (walking past the camera)
+        burst = float(scores[i:i + wn].max()) / (level + 1e-3)
+        score = max(ac, 0.0) * level / (1.0 + 0.1 * max(0.0, burst - 4.0))
+        if score > best:
+            best, best_i = score, i
+    start = (best_i + wn / 2) * step - length / 2
+    return max(0.0, min(start, duration - length)), best
 
 
 def frame_filter(meta):
@@ -114,6 +128,10 @@ def main():
     ap.add_argument("--max-shot", type=float, default=3.0)
     ap.add_argument("--title", default="", help="small serif title shown at the start")
     ap.add_argument("--no-slowmo", action="store_true")
+    ap.add_argument("--pick", action="append", default=[], metavar="NAME=SECONDS",
+                    help="force where a clip's shot starts, e.g. --pick IMG_1401=42.5 (repeatable)")
+    ap.add_argument("--dry-run", action="store_true", help="only print which moments would be used")
+    ap.add_argument("--slow", metavar="NAME", help="which clip gets the slow-motion shot")
     a = ap.parse_args()
 
     clips = []
@@ -122,6 +140,7 @@ def main():
     if not clips:
         sys.exit("no clips found")
 
+    picks_override = {k: float(v) for k, v in (x.split("=", 1) for x in a.pick)}
     shot = min(a.max_shot, max(a.min_shot, a.target / len(clips)))
     picks = []
     for c in clips:
@@ -129,6 +148,8 @@ def main():
         length = min(shot, meta["duration"])
         scores, step = motion_curve(c)
         start, energy = best_window(scores, step, length, meta["duration"])
+        if c.stem in picks_override:
+            start = picks_override[c.stem]
         picks.append({"path": c, "meta": meta, "start": start, "len": length, "energy": energy})
         print(f"{c.name}: {meta['duration']:.1f}s {meta['fps']:.0f}fps{' HDR' if meta['hdr'] else ''}"
               f" -> {start:.1f}s +{length:.1f}s (motion {energy:.1f})")
@@ -136,11 +157,15 @@ def main():
     slow = None
     if not a.no_slowmo:
         fast = [p for p in picks if p["meta"]["fps"] >= 50]
+        if a.slow:
+            fast = [p for p in fast if p["path"].stem == a.slow] or fast
         if fast:
             slow = max(fast, key=lambda p: p["energy"])
             slow["slow"] = True
             print(f"slow motion: {slow['path'].name}")
 
+    if a.dry_run:
+        return
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:

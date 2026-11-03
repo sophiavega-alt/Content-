@@ -32,7 +32,9 @@ python3 -c "from faster_whisper import WhisperModel; m=WhisperModel('small', com
 [print(f'{w.start:.2f}-{w.end:.2f} {w.word}') for s in m.transcribe('clip.mp4', word_timestamps=True)[0] for w in s.words]"
 
 # Aesthetic workout montage for TikTok (vertical, warm film grade, auto-picks the reps, 0.5x slow-mo)
-python3 scripts/montage.py downloads/gym/ -o renders/gym_montage.mp4 --title "leg day"
+python3 scripts/montage.py downloads/gym/ -o renders/gym_montage.mp4 --title "upper day" --dry-run   # see picks
+python3 scripts/montage.py downloads/gym/ -o renders/gym_montage.mp4 --title "upper day" \
+  --pick IMG_1404=72.6 --slow IMG_1404   # override a clip's moment / choose the slow-mo shot
 
 # Captions/graphics composition
 npx hyperframes init my-video && npx hyperframes preview && npx hyperframes render
