@@ -1,0 +1,12 @@
+{
+  "clips_dir": "downloads/gym",
+  "shots": [
+    {"clip": "IMG_1399.mp4", "start": 15.0,  "dur": 3.0, "label": "upper day", "style": "intro"},
+    {"clip": "IMG_1398.mp4", "start": 128.6, "dur": 3.8, "label": "lateral raise"},
+    {"clip": "IMG_1397.mp4", "start": 144.0, "dur": 4.5, "label": "lateral raise"},
+    {"clip": "IMG_1401.mp4", "start": 96.0,  "dur": 5.5, "label": "rear delt fly"},
+    {"clip": "IMG_1402.mp4", "start": 94.0,  "dur": 5.5, "label": "single arm row"},
+    {"clip": "IMG_1404.mp4", "start": 70.0,  "dur": 6.0, "label": "neutral grip lat pulldown"},
+    {"clip": "IMG_1406.mp4", "start": 144.0, "dur": 5.5, "label": "cable curl"}
+  ]
+}

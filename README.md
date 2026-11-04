@@ -36,6 +36,9 @@ python3 scripts/montage.py downloads/gym/ -o renders/gym_montage.mp4 --title "up
 python3 scripts/montage.py downloads/gym/ -o renders/gym_montage.mp4 --title "upper day" \
   --pick IMG_1404=72.6 --slow IMG_1404   # override a clip's moment / choose the slow-mo shot
 
+# Gym-TikTok style edit: real-time sets with a small label per exercise (edit the JSON plan)
+python3 scripts/workout_edit.py plans/upper_day.json -o renders/upper_day.mp4
+
 # Captions/graphics composition
 npx hyperframes init my-video && npx hyperframes preview && npx hyperframes render
 ```
