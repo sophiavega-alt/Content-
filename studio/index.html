@@ -1,0 +1,748 @@
+<title>Sophia's Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: phone-first single column, sticky tab bar, cards only where an object stands alone */
+:root{
+  --bg:#F5F4F8; --surface:#FFFFFF; --ink:#1D1A24; --muted:#6A6476; --line:#E3E0EA;
+  --accent:#C93A6E; --accent-ink:#FFFFFF; --accent-soft:#FBE4EC;
+  --good:#2F7D5B; --good-soft:#E1F2E9; --warn:#B4520F; --warn-soft:#FCEBDD;
+  --p-gym:#C93A6E; --p-life:#3E8C6B; --p-grwm:#C58613; --p-fit:#6D55C7; --p-other:#8A8496;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131117; --surface:#1D1A23; --ink:#F2EFF6; --muted:#A49EAF; --line:#2F2B37;
+  --accent:#F0709B; --accent-ink:#1D1A23; --accent-soft:#3B1E2A;
+  --good:#7CC7A2; --good-soft:#1D3229; --warn:#F3A066; --warn-soft:#3A2618;
+  --p-gym:#F0709B; --p-life:#6CC49C; --p-grwm:#E8B04B; --p-fit:#A693F2; --p-other:#9C96A8;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131117; --surface:#1D1A23; --ink:#F2EFF6; --muted:#A49EAF; --line:#2F2B37;
+  --accent:#F0709B; --accent-ink:#1D1A23; --accent-soft:#3B1E2A;
+  --good:#7CC7A2; --good-soft:#1D3229; --warn:#F3A066; --warn-soft:#3A2618;
+  --p-gym:#F0709B; --p-life:#6CC49C; --p-grwm:#E8B04B; --p-fit:#A693F2; --p-other:#9C96A8;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-block:28px 14px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,44px);line-height:1;letter-spacing:-.02em;margin:0}
+h2{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:700;font-size:16px;margin:0}
+.handles{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;color:var(--muted);font-size:13px;align-items:center}
+.handles b{color:var(--ink);font-weight:600}
+.mode{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--line);color:var(--muted)}
+.mode.ok{background:var(--good-soft);color:var(--good)}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:8px}
+nav.tabs button{font:600 14px var(--body);border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:99px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+main{padding-block:22px 64px}
+section.view{display:flex;flex-direction:column;gap:22px}
+.block{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.kpi .v{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.1}
+.kpi .l{font-size:12px;color:var(--muted)}
+button,.btn{font:600 14px var(--body);border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.ghost{background:transparent}
+button.link{border:0;background:none;padding:4px 6px;color:var(--muted);font-weight:500}
+button:disabled{opacity:.55;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,label.file:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0;width:100%}
+textarea{resize:vertical}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.fields{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.fields .wide{grid-column:1/-1}
+label.file{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--body);padding:9px 14px;border-radius:10px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+label.file input{position:absolute;opacity:0;width:1px;height:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--body);padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+.tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pc,var(--p-other))}
+.pc-gym{--pc:var(--p-gym)} .pc-life{--pc:var(--p-life)} .pc-grwm{--pc:var(--p-grwm)} .pc-fit{--pc:var(--p-fit)} .pc-other{--pc:var(--p-other)}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:18px;color:var(--muted);font-size:14px}
+ul.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ul.tasks li{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+ul.tasks li:last-child{border-bottom:0}
+ul.tasks input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex:none}
+ul.tasks .t{flex:1;min-width:0;overflow-wrap:anywhere}
+ul.tasks .time{font-size:12px;color:var(--muted);flex:none;min-width:44px}
+ul.tasks li.done .t{text-decoration:line-through;color:var(--muted)}
+.progress{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:110px 1fr 70px;gap:10px;align-items:center;font-size:13px}
+.bar .track{height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;background:var(--pc,var(--accent));border-radius:99px}
+.bar .num{text-align:right;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+.hook{overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px}
+.pill.up{background:var(--good-soft);color:var(--good)}
+.pill.down{background:var(--warn-soft);color:var(--warn)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.week{display:flex;flex-direction:column}
+.week .d{display:grid;grid-template-columns:48px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.week .d:last-child{border-bottom:0}
+.week .d.today .dn{color:var(--accent)}
+.week .dn{font-family:var(--display);font-weight:700}
+.idea{display:flex;flex-direction:column;gap:6px}
+.idea .title{font-weight:600}
+.idea .h{font-style:italic}
+.status{display:flex;gap:4px}
+.status button{font-size:12px;padding:4px 10px;border-radius:99px}
+.status button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spinner{animation:none}.progress span{transition:none}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
+.brief p{margin:0}
+.ai-out{white-space:pre-wrap}
+@media (max-width:480px){.bar{grid-template-columns:86px 1fr 58px}}
+</style>
+
+<header class="top"><div class="wrap">
+  <h1>Sophia's Studio</h1>
+  <div class="handles">
+    <span>TikTok <b>@sophiavega5</b></span>
+    <span>Instagram <b>@ssophiavega</b></span>
+    <span class="mode" id="mode">Loading…</span>
+  </div>
+</div></header>
+
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist">
+  <button role="tab" data-tab="today" id="tab-today">Today</button>
+  <button role="tab" data-tab="plan" id="tab-plan">This week</button>
+  <button role="tab" data-tab="posts" id="tab-posts">Posts &amp; stats</button>
+  <button role="tab" data-tab="ideas" id="tab-ideas">Idea bank</button>
+</div></nav>
+
+<main class="wrap">
+
+<!-- TODAY -->
+<section class="view" id="view-today" hidden>
+  <div class="block">
+    <div class="eyebrow">Morning brief</div>
+    <h2 id="todayDate"></h2>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">On the content plan today</div>
+    <div id="todayPlan"></div>
+  </div>
+
+  <div class="block">
+    <h3>Training</h3>
+    <div class="chips" id="training"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3>To-do</h3>
+      <span class="small muted" id="taskCount"></span>
+    </div>
+    <div class="progress" aria-hidden="true"><span id="taskBar" style="width:0"></span></div>
+    <ul class="tasks" id="tasks"></ul>
+    <form id="taskForm" class="row" autocomplete="off">
+      <input id="taskTime" type="time" style="width:auto;flex:none" aria-label="Time (optional)">
+      <input id="taskText" placeholder="Add a to-do, e.g. reply to brand email" style="flex:1 1 180px" aria-label="To-do">
+      <button class="primary" type="submit">Add</button>
+    </form>
+    <div class="row"><button class="link" id="carryBtn" type="button">Bring over unfinished to-dos from yesterday</button></div>
+  </div>
+
+  <div class="card" id="briefCard">
+    <div class="row" style="justify-content:space-between">
+      <h3>Your brief from Claude</h3>
+      <button class="primary ai" id="briefBtn" type="button">Write my brief</button>
+    </div>
+    <div id="briefOut" class="brief"><p class="muted small">Add your to-dos and training, then tap Write my brief. Claude picks what to do first and what to film today from your plan and idea bank.</p></div>
+  </div>
+</section>
+
+<!-- PLAN -->
+<section class="view" id="view-plan" hidden>
+  <div class="block">
+    <div class="eyebrow">What to film this week</div>
+    <div class="row" style="justify-content:space-between">
+      <h2>Weekly plan</h2>
+      <button class="primary ai" id="planBtn" type="button">Make this week's plan</button>
+    </div>
+    <p class="muted small" id="planBasis" style="margin:0"></p>
+  </div>
+  <div id="planOut"></div>
+</section>
+
+<!-- POSTS -->
+<section class="view" id="view-posts" hidden>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <h3>Add posts</h3>
+    <p class="small muted" style="margin:0">Fastest: screenshot the Insights page of a TikTok or Reel (views, likes, comments, saves, shares) and upload it. Claude reads the numbers and you check them before saving.</p>
+    <div class="row">
+      <label class="file ai-only"><input type="file" id="shotInput" accept="image/*" multiple>Upload screenshots</label>
+      <button type="button" id="manualBtn">Type one in</button>
+      <span class="small muted" id="shotStatus"></span>
+    </div>
+    <div id="drafts" class="block"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Average views by pillar</h3>
+      <div id="pillarBars" class="bars"></div>
+    </div>
+    <div class="card">
+      <h3>Engagement rate by pillar</h3>
+      <div id="engBars" class="bars"></div>
+      <p class="small muted" style="margin:0">Likes, comments, saves and shares divided by views.</p>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h3>Best day to post</h3>
+      <div id="dayBars" class="bars"></div>
+    </div>
+    <div class="card">
+      <h3>Top 5 posts</h3>
+      <div id="topPosts"></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>All posts</h3>
+    <div id="postTable"></div>
+  </div>
+</section>
+
+<!-- IDEAS -->
+<section class="view" id="view-ideas" hidden>
+  <div class="block">
+    <div class="row" style="justify-content:space-between">
+      <h2>Idea bank</h2>
+      <button class="primary ai" id="ideasBtn" type="button">Get 10 ideas</button>
+    </div>
+    <div class="chips" id="ideaFilter"></div>
+  </div>
+  <form class="card" id="ideaForm" autocomplete="off">
+    <h3>Save an idea</h3>
+    <div class="fields">
+      <label class="f wide">Idea<input id="ideaTitle" required placeholder="e.g. What I eat on a leg day"></label>
+      <label class="f wide">Hook (first line)<input id="ideaHook" placeholder="e.g. POV: you finally hit a 100kg hip thrust"></label>
+      <label class="f">Pillar<select id="ideaPillar"></select></label>
+    </div>
+    <div class="row"><button class="primary" type="submit">Save idea</button></div>
+  </form>
+  <div id="ideaList" class="block"></div>
+</section>
+
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const PILLARS = ["Gym","Everyday life","GRWM","Outfits","Other"];
+const PC = {"Gym":"gym","Everyday life":"life","GRWM":"grwm","Outfits":"fit","Other":"other"};
+const TRAINING = ["Push","Pull","Legs","Glutes","Upper","Lower","Full body","Cardio","Rest day"];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const PROFILE = "Sophia is a lifestyle creator. TikTok @sophiavega5, Instagram @ssophiavega. Content pillars: gym and training content, everyday life / day-in-my-life, GRWM (get ready with me), outfits and styling.";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const now = new Date();
+const TODAY = ymd(now);
+const YESTERDAY = ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate()-1));
+const fmt = n => n == null || isNaN(n) ? "–" : n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,"")+"M" : n >= 1e4 ? Math.round(n/1e3)+"K" : n >= 1e3 ? (n/1e3).toFixed(1).replace(/\.0$/,"")+"K" : String(Math.round(n));
+const pct = x => x == null ? "–" : (x*100).toFixed(1)+"%";
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const num = v => { const n = Number(String(v ?? "").replace(/[^0-9.]/g,"")); return isFinite(n) && String(v ?? "").trim() !== "" ? n : null; };
+
+let toastT;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,3200); }
+
+/* ---------- storage: account (db) or this device ---------- */
+const Store = (() => {
+  let mode = "local", db = null, me = null;
+  const LS = "sophia-studio-v1";
+  let local; try { local = JSON.parse(localStorage.getItem(LS)) || {c:{},d:{}}; } catch { local = {c:{},d:{}}; }
+  const lw = {};
+  const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(local)); } catch {} };
+  const readLocal = k => k.startsWith("c:") ? Object.entries(local.c[k.slice(2)]||{}).map(([id,v])=>({id,...v})) : (local.d[k.slice(2)] ?? null);
+  const emit = k => (lw[k]||[]).forEach(f => f(readLocal(k)));
+  const collPath = n => `data/users/${me}/profile/${n}`;
+  const docPath = n => `data/users/${me}/${n}`;
+  let chain = Promise.resolve();
+  const queue = fn => (chain = chain.then(fn).catch(e => { console.error(e); toast(e && e.code === "quota_exceeded" ? "Storage is full. Delete some old posts or ideas." : "Couldn't save that. Check your connection and try again."); }));
+  const onErr = e => { if (e && e.code === "revoked") setMode("off"); };
+  return {
+    get mode(){ return mode; },
+    remote(d, id){ db = d; me = id; mode = "account"; },
+    watchColl(n, cb){
+      if (mode === "account") db.collection(collPath(n)).onSnapshot(s => cb(s.docs.map(x => ({id:x.id, ...x.data()}))), onErr);
+      else { (lw["c:"+n] ??= []).push(cb); cb(readLocal("c:"+n)); }
+    },
+    watchDoc(n, cb){
+      if (mode === "account") db.doc(docPath(n)).onSnapshot(s => cb(s.exists ? s.data() : null), onErr);
+      else { (lw["d:"+n] ??= []).push(cb); cb(readLocal("d:"+n)); }
+    },
+    async getDoc(n){
+      if (mode === "account") { const s = await db.doc(docPath(n)).get(); return s.exists ? s.data() : null; }
+      return readLocal("d:"+n);
+    },
+    setDoc(n, data){ return queue(async () => {
+      if (mode === "account") await db.doc(docPath(n)).set(data);
+      else { local.d[n] = data; saveLocal(); emit("d:"+n); }
+    }); },
+    put(c, id, data){ return queue(async () => {
+      if (mode === "account") await db.collection(collPath(c)).doc(id).set(data);
+      else { (local.c[c] ??= {})[id] = data; saveLocal(); emit("c:"+c); }
+    }); },
+    del(c, id){ return queue(async () => {
+      if (mode === "account") await db.collection(collPath(c)).doc(id).delete();
+      else { if (local.c[c]) delete local.c[c][id]; saveLocal(); emit("c:"+c); }
+    }); }
+  };
+})();
+
+function setMode(m){
+  const el = $("#mode");
+  el.className = "mode" + (m === "account" ? " ok" : "");
+  el.textContent = m === "account" ? "Saved to your account" : m === "off" ? "Read-only right now" : "Saved on this device only";
+}
+
+/* ---------- state ---------- */
+const S = { posts:[], ideas:[], plan:null, day:{tasks:[], training:"", brief:null}, filter:"All", drafts:[], sample:null, busy:{} };
+
+/* ---------- tabs ---------- */
+const TABS = ["today","plan","posts","ideas"];
+function showTab(t){
+  if (!TABS.includes(t)) t = "today";
+  TABS.forEach(x => { $("#view-"+x).hidden = x !== t; $("#tab-"+x).setAttribute("aria-selected", x === t); });
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => { location.hash = b.dataset.tab; showTab(b.dataset.tab); }));
+addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1));
+
+/* ---------- stats ---------- */
+const eng = p => { const v = +p.views || 0; if (!v) return null; return ((+p.likes||0)+(+p.comments||0)+(+p.saves||0)+(+p.shares||0))/v; };
+function groupStats(keyFn){
+  const g = {};
+  S.posts.forEach(p => { const k = keyFn(p); if (k == null) return; (g[k] ??= []).push(p); });
+  const out = {};
+  for (const [k, arr] of Object.entries(g)) {
+    const withV = arr.filter(p => +p.views > 0);
+    const e = arr.map(eng).filter(x => x != null);
+    out[k] = { n: arr.length, avgViews: withV.length ? withV.reduce((a,p)=>a+ +p.views,0)/withV.length : null, avgEng: e.length ? e.reduce((a,b)=>a+b,0)/e.length : null };
+  }
+  return out;
+}
+function statsSummary(){
+  const by = groupStats(p => p.pillar || "Other");
+  const plat = groupStats(p => p.platform);
+  const lines = Object.entries(by).map(([k,v]) => `${k}: ${v.n} posts, avg views ${fmt(v.avgViews)}, avg engagement ${pct(v.avgEng)}`);
+  const pl = Object.entries(plat).map(([k,v]) => `${k}: ${v.n} posts, avg views ${fmt(v.avgViews)}`);
+  const recent = [...S.posts].sort((a,b) => (b.date||"").localeCompare(a.date||"")).slice(0,50)
+    .map(p => `${p.date||"?"} | ${p.platform} | ${p.pillar||"Other"} | views ${p.views??"?"} likes ${p.likes??"?"} comments ${p.comments??"?"} saves ${p.saves??"?"} shares ${p.shares??"?"} | hook: "${(p.hook||"").slice(0,140)}"`);
+  return `Posts logged: ${S.posts.length}\nBy pillar:\n${lines.join("\n")||"none"}\nBy platform:\n${pl.join("\n")||"none"}\nRecent posts (newest first):\n${recent.join("\n")||"none"}`;
+}
+
+/* ---------- render: today ---------- */
+function renderToday(){
+  $("#todayDate").textContent = now.toLocaleDateString(undefined, {weekday:"long", day:"numeric", month:"long"});
+  const dn = DAYS[now.getDay()];
+  const item = S.plan?.week?.find(d => (d.day||"").slice(0,3) === dn);
+  $("#todayPlan").innerHTML = item
+    ? `<div class="idea"><span class="tag pc-${PC[item.pillar]||"other"}">${esc(item.pillar)}</span><div class="title">${esc(item.idea)}</div>${item.note?`<div class="small muted">${esc(item.note)}</div>`:""}</div>`
+    : `<div class="small muted">No plan yet. Make one on the <a href="#plan">This week</a> tab and today's filming slot shows up here.</div>`;
+
+  $("#training").innerHTML = TRAINING.map(t => `<button type="button" class="chip" aria-pressed="${S.day.training===t}" data-t="${esc(t)}">${esc(t)}</button>`).join("");
+
+  const tasks = [...(S.day.tasks||[])].sort((a,b) => (a.time||"99").localeCompare(b.time||"99"));
+  const done = tasks.filter(t => t.done).length;
+  $("#taskCount").textContent = tasks.length ? `${done} of ${tasks.length} done` : "";
+  $("#taskBar").style.width = tasks.length ? (done/tasks.length*100)+"%" : "0";
+  $("#tasks").innerHTML = tasks.length ? tasks.map(t => `
+    <li class="${t.done?"done":""}">
+      <input type="checkbox" id="tk-${t.id}" data-id="${t.id}" ${t.done?"checked":""}>
+      <span class="time">${esc(t.time||"")}</span>
+      <label class="t" for="tk-${t.id}">${esc(t.text)}</label>
+      <button type="button" class="link" data-del-task="${t.id}" aria-label="Delete">✕</button>
+    </li>`).join("") : `<li class="muted small">Nothing yet. Add the first thing you need to get done today.</li>`;
+
+  const b = S.day.brief;
+  if (b && !S.busy.brief) {
+    $("#briefOut").innerHTML = `
+      <div class="block">
+        <p style="font-family:var(--display);font-weight:700;font-size:18px">${esc(b.headline)}</p>
+        <div><div class="eyebrow">Do first</div><p>${esc(b.doFirst)}</p></div>
+        <div><div class="eyebrow">Film today</div><p>${esc(b.filmToday)}</p></div>
+        ${b.training?`<div><div class="eyebrow">Training</div><p>${esc(b.training)}</p></div>`:""}
+        ${b.watchout?`<div><div class="eyebrow">Watch out</div><p>${esc(b.watchout)}</p></div>`:""}
+        <p class="small muted">Written at ${esc(b.at||"")}</p>
+      </div>`;
+  }
+}
+function saveDay(){ return Store.setDoc("day-"+TODAY, S.day); }
+
+$("#training").addEventListener("click", e => {
+  const b = e.target.closest("[data-t]"); if (!b) return;
+  S.day.training = S.day.training === b.dataset.t ? "" : b.dataset.t; renderToday(); saveDay();
+});
+$("#taskForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = $("#taskText").value.trim(); if (!text) return;
+  S.day.tasks = [...(S.day.tasks||[]), {id:uid(), text, time:$("#taskTime").value||"", done:false}];
+  $("#taskText").value = ""; $("#taskTime").value = "";
+  renderToday(); saveDay();
+});
+$("#tasks").addEventListener("change", e => {
+  const id = e.target.dataset.id; if (!id) return;
+  S.day.tasks = S.day.tasks.map(t => t.id === id ? {...t, done:e.target.checked} : t); renderToday(); saveDay();
+});
+$("#tasks").addEventListener("click", e => {
+  const id = e.target.closest("[data-del-task]")?.dataset.delTask; if (!id) return;
+  S.day.tasks = S.day.tasks.filter(t => t.id !== id); renderToday(); saveDay();
+});
+$("#carryBtn").addEventListener("click", async () => {
+  try {
+    const y = await Store.getDoc("day-"+YESTERDAY);
+    const left = (y?.tasks||[]).filter(t => !t.done && !S.day.tasks.some(x => x.text === t.text));
+    if (!left.length) return toast("Nothing left over from yesterday.");
+    S.day.tasks = [...S.day.tasks, ...left.map(t => ({...t, id:uid(), done:false}))];
+    renderToday(); saveDay(); toast(`Brought over ${left.length} to-do${left.length>1?"s":""}.`);
+  } catch { toast("Couldn't load yesterday's list."); }
+});
+
+/* ---------- render: plan ---------- */
+function renderPlan(){
+  $("#planBasis").textContent = S.posts.length
+    ? `Based on ${S.posts.length} logged post${S.posts.length>1?"s":""}. Log more on the Posts tab for sharper plans.`
+    : "You haven't logged any posts yet, so the first plan uses your pillars and what usually works in your niche. Log posts for a plan built on your own numbers.";
+  const p = S.plan;
+  if (S.busy.plan) return;
+  if (!p) { $("#planOut").innerHTML = `<div class="empty">No plan yet. Tap <b>Make this week's plan</b> and Claude writes three ready-to-film ideas and a day-by-day schedule for your pillars.</div>`; return; }
+  const dn = DAYS[now.getDay()];
+  $("#planOut").innerHTML = `
+  <div class="block">
+    <p style="margin:0">${esc(p.summary)}</p>
+    <p class="small muted" style="margin:0">Made ${esc(p.at||"")}</p>
+    <div class="grid">
+      ${p.rising?`<div class="card"><span class="pill up">Rising</span><h3>${esc(p.rising.pillar)}</h3><p class="small" style="margin:0">${esc(p.rising.note)}</p></div>`:""}
+      ${p.slipping?`<div class="card"><span class="pill down">Ease off</span><h3>${esc(p.slipping.pillar)}</h3><p class="small" style="margin:0">${esc(p.slipping.note)}</p></div>`:""}
+      ${p.bestHook?`<div class="card"><span class="pill acc">Hook to reuse</span><h3 class="hook">“${esc(p.bestHook.hook)}”</h3><p class="small" style="margin:0">${esc(p.bestHook.why)}</p></div>`:""}
+    </div>
+    ${p.tryNext?`<div class="card"><div class="eyebrow">Experiment this week</div><p style="margin:0">${esc(p.tryNext)}</p></div>`:""}
+    <h3>3 ideas to film</h3>
+    <div class="grid">
+      ${(p.ideas||[]).map((i,ix) => `<div class="card idea">
+        <span class="tag pc-${PC[i.pillar]||"other"}">${esc(i.pillar)} · ${esc(i.platform||"")}${i.format?" · "+esc(i.format):""}</span>
+        <div class="title">${esc(i.title)}</div>
+        <div class="h small">“${esc(i.hook)}”</div>
+        <div class="small muted">${esc(i.why)}</div>
+        <div><button type="button" data-save-plan-idea="${ix}">Save to idea bank</button></div>
+      </div>`).join("")}
+    </div>
+    <h3>Day by day</h3>
+    <div class="card week">
+      ${(p.week||[]).map(d => `<div class="d ${ (d.day||"").slice(0,3)===dn?"today":""}"><div class="dn">${esc((d.day||"").slice(0,3))}</div><div><span class="tag pc-${PC[d.pillar]||"other"}">${esc(d.pillar)}</span><div>${esc(d.idea)}</div>${d.note?`<div class="small muted">${esc(d.note)}</div>`:""}</div></div>`).join("")}
+    </div>
+  </div>`;
+}
+$("#planOut").addEventListener("click", e => {
+  const ix = e.target.closest("[data-save-plan-idea]")?.dataset.savePlanIdea; if (ix == null) return;
+  const i = S.plan.ideas[+ix];
+  if (S.ideas.some(x => x.title === i.title)) return toast("Already in your idea bank.");
+  Store.put("ideas", uid(), {title:i.title, hook:i.hook||"", pillar:PILLARS.includes(i.pillar)?i.pillar:"Other", why:i.why||"", status:"idea", createdAt:Date.now()});
+  toast("Saved to your idea bank.");
+});
+
+/* ---------- render: posts ---------- */
+function bars(el, entries, valFn, labelFn){
+  const max = Math.max(...entries.map(([,v]) => valFn(v) || 0), 0);
+  el.innerHTML = entries.length && max > 0 ? entries.map(([k,v]) => `
+    <div class="bar pc-${PC[k]||"other"}"><span>${esc(k)}</span><div class="track"><div class="fill" style="width:${((valFn(v)||0)/max*100).toFixed(1)}%"></div></div><span class="num">${labelFn(v)}</span></div>`).join("")
+    : `<div class="small muted">Shows up once you've logged posts with views.</div>`;
+}
+function renderPosts(){
+  const P = S.posts;
+  const withV = P.filter(p => +p.views > 0);
+  const totalViews = withV.reduce((a,p) => a + +p.views, 0);
+  const es = P.map(eng).filter(x => x != null);
+  const plat = groupStats(p => p.platform);
+  $("#kpis").innerHTML = [
+    ["Posts logged", P.length],
+    ["Total views", fmt(totalViews)],
+    ["Avg views / post", withV.length ? fmt(totalViews/withV.length) : "–"],
+    ["Avg engagement", es.length ? pct(es.reduce((a,b)=>a+b,0)/es.length) : "–"],
+    ["TikTok avg views", fmt(plat.tiktok?.avgViews)],
+    ["Instagram avg views", fmt(plat.instagram?.avgViews)]
+  ].map(([l,v]) => `<div class="kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join("");
+
+  const by = groupStats(p => p.pillar || "Other");
+  const ent = PILLARS.filter(k => by[k]).map(k => [k, by[k]]);
+  bars($("#pillarBars"), ent, v => v.avgViews, v => `${fmt(v.avgViews)} <span class="small">· ${v.n}</span>`);
+  bars($("#engBars"), ent, v => v.avgEng, v => pct(v.avgEng));
+  const wd = groupStats(p => p.date ? DAYS[new Date(p.date+"T12:00").getDay()] : null);
+  const dayEnt = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].filter(d => wd[d]).map(d => [d, wd[d]]);
+  if (withV.length < 7) $("#dayBars").innerHTML = `<div class="small muted">Log at least 7 posts with dates and views to see which days work best. ${withV.length ? `(${withV.length} so far)` : ""}</div>`;
+  else bars($("#dayBars"), dayEnt, v => v.avgViews, v => fmt(v.avgViews));
+
+  const top = [...withV].sort((a,b) => b.views - a.views).slice(0,5);
+  $("#topPosts").innerHTML = top.length ? `<div class="week">${top.map((p,i) => `<div class="d"><div class="dn">#${i+1}</div><div><span class="tag pc-${PC[p.pillar]||"other"}">${esc(p.pillar||"Other")} · ${p.platform==="tiktok"?"TikTok":"Instagram"}</span><div class="hook">${esc(p.hook||"(no hook noted)")}</div><div class="small muted">${fmt(+p.views)} views · ${pct(eng(p))} engagement${p.date?" · "+esc(p.date):""}</div></div></div>`).join("")}</div>` : `<div class="small muted">Your best posts appear here.</div>`;
+
+  const sorted = [...P].sort((a,b) => (b.date||"").localeCompare(a.date||""));
+  $("#postTable").innerHTML = sorted.length ? `<div class="tablewrap"><table>
+    <thead><tr><th>Date</th><th>Where</th><th>Pillar</th><th>Hook / caption</th><th class="n">Views</th><th class="n">Likes</th><th class="n">Comm.</th><th class="n">Saves</th><th class="n">Shares</th><th class="n">Eng.</th><th></th></tr></thead>
+    <tbody>${sorted.map(p => `<tr>
+      <td>${esc(p.date||"–")}</td><td>${p.platform==="tiktok"?"TikTok":"Instagram"}</td>
+      <td><span class="tag pc-${PC[p.pillar]||"other"}">${esc(p.pillar||"Other")}</span></td>
+      <td class="hook">${esc(p.hook||"")}</td>
+      <td class="n">${fmt(p.views)}</td><td class="n">${fmt(p.likes)}</td><td class="n">${fmt(p.comments)}</td><td class="n">${fmt(p.saves)}</td><td class="n">${fmt(p.shares)}</td><td class="n">${pct(eng(p))}</td>
+      <td><button type="button" class="link" data-del-post="${p.id}">Delete</button></td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty">No posts yet. Upload a screenshot of a post's Insights, or type one in above.</div>`;
+}
+function confirmClick(btn, label, fn){
+  if (btn.dataset.armed) { fn(); return; }
+  btn.dataset.armed = "1"; const old = btn.textContent; btn.textContent = label;
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = old; } }, 3000);
+}
+$("#postTable").addEventListener("click", e => {
+  const b = e.target.closest("[data-del-post]"); if (!b) return;
+  confirmClick(b, "Sure?", () => Store.del("posts", b.dataset.delPost));
+});
+
+/* drafts (review before saving) */
+function draftHTML(d){
+  const v = k => d[k] == null ? "" : esc(d[k]);
+  return `<form class="card" data-draft="${d._id}" autocomplete="off">
+    <div class="fields">
+      <label class="f">Platform<select name="platform"><option value="tiktok" ${d.platform!=="instagram"?"selected":""}>TikTok</option><option value="instagram" ${d.platform==="instagram"?"selected":""}>Instagram</option></select></label>
+      <label class="f">Date posted<input type="date" name="date" value="${v("date")}"></label>
+      <label class="f">Pillar<select name="pillar">${PILLARS.map(p => `<option ${d.pillar===p?"selected":""}>${p}</option>`).join("")}</select></label>
+      <label class="f wide">Hook or caption<input name="hook" value="${v("hook")}" placeholder="First line of the video or caption"></label>
+      <label class="f">Views<input name="views" inputmode="numeric" value="${v("views")}"></label>
+      <label class="f">Likes<input name="likes" inputmode="numeric" value="${v("likes")}"></label>
+      <label class="f">Comments<input name="comments" inputmode="numeric" value="${v("comments")}"></label>
+      <label class="f">Saves<input name="saves" inputmode="numeric" value="${v("saves")}"></label>
+      <label class="f">Shares<input name="shares" inputmode="numeric" value="${v("shares")}"></label>
+    </div>
+    <div class="row"><button class="primary" type="submit">Save post</button><button type="button" class="ghost" data-discard="${d._id}">Discard</button>${d._fromShot?`<span class="small muted">Read from your screenshot. Check the numbers.</span>`:""}</div>
+  </form>`;
+}
+function renderDrafts(){ $("#drafts").innerHTML = S.drafts.map(draftHTML).join(""); }
+$("#manualBtn").addEventListener("click", () => { S.drafts.unshift({_id:uid(), platform:"tiktok", date:TODAY, pillar:"Gym"}); renderDrafts(); $("#drafts input[name=hook]")?.focus(); });
+$("#drafts").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target, id = f.dataset.draft, fd = new FormData(f);
+  const post = { platform: fd.get("platform"), date: fd.get("date") || "", pillar: fd.get("pillar"), hook: String(fd.get("hook")||"").trim(),
+    views:num(fd.get("views")), likes:num(fd.get("likes")), comments:num(fd.get("comments")), saves:num(fd.get("saves")), shares:num(fd.get("shares")), createdAt:Date.now() };
+  Store.put("posts", uid(), post);
+  S.drafts = S.drafts.filter(d => d._id !== id); renderDrafts(); toast("Post saved.");
+});
+$("#drafts").addEventListener("click", e => {
+  const id = e.target.closest("[data-discard]")?.dataset.discard; if (!id) return;
+  S.drafts = S.drafts.filter(d => d._id !== id); renderDrafts();
+});
+
+/* ---------- render: ideas ---------- */
+function renderIdeas(){
+  $("#ideaFilter").innerHTML = ["All", ...PILLARS, "Filmed", "Posted"].map(f => `<button type="button" class="chip" aria-pressed="${S.filter===f}" data-f="${f}">${f}</button>`).join("");
+  let list = [...S.ideas].sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+  if (S.filter === "Filmed") list = list.filter(i => i.status === "filmed");
+  else if (S.filter === "Posted") list = list.filter(i => i.status === "posted");
+  else if (S.filter !== "All") list = list.filter(i => i.pillar === S.filter && i.status !== "posted");
+  else list = list.filter(i => i.status !== "posted");
+  $("#ideaList").innerHTML = list.length ? `<div class="grid">${list.map(i => `<div class="card idea">
+      <span class="tag pc-${PC[i.pillar]||"other"}">${esc(i.pillar||"Other")}</span>
+      <div class="title">${esc(i.title)}</div>
+      ${i.hook?`<div class="h small">“${esc(i.hook)}”</div>`:""}
+      ${i.why?`<div class="small muted">${esc(i.why)}</div>`:""}
+      <div class="row" style="justify-content:space-between">
+        <div class="status">${["idea","filmed","posted"].map(s => `<button type="button" aria-pressed="${(i.status||"idea")===s}" data-status="${s}" data-id="${i.id}">${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}</div>
+        <button type="button" class="link" data-del-idea="${i.id}">Delete</button>
+      </div></div>`).join("")}</div>`
+    : `<div class="empty">${S.ideas.length ? "Nothing in this filter." : "Your idea bank is empty. Save an idea above, or tap Get 10 ideas."}</div>`;
+}
+$("#ideaPillar").innerHTML = PILLARS.map(p => `<option>${p}</option>`).join("");
+$("#ideaFilter").addEventListener("click", e => { const f = e.target.closest("[data-f]")?.dataset.f; if (f) { S.filter = f; renderIdeas(); } });
+$("#ideaForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const title = $("#ideaTitle").value.trim(); if (!title) return;
+  Store.put("ideas", uid(), {title, hook:$("#ideaHook").value.trim(), pillar:$("#ideaPillar").value, status:"idea", createdAt:Date.now()});
+  $("#ideaTitle").value = ""; $("#ideaHook").value = ""; toast("Idea saved.");
+});
+$("#ideaList").addEventListener("click", e => {
+  const s = e.target.closest("[data-status]");
+  if (s) { const i = S.ideas.find(x => x.id === s.dataset.id); if (i) { const {id, ...rest} = i; Store.put("ideas", id, {...rest, status:s.dataset.status}); } return; }
+  const d = e.target.closest("[data-del-idea]");
+  if (d) confirmClick(d, "Sure?", () => Store.del("ideas", d.dataset.delIdea));
+});
+
+/* ---------- Claude ---------- */
+function busy(key, btn, on, label){
+  S.busy[key] = on; btn.disabled = on;
+  if (on) { btn.dataset.label = btn.textContent; btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${label}`; }
+  else btn.textContent = btn.dataset.label || btn.textContent;
+}
+function aiError(e){
+  const c = e && e.code;
+  if (c === "not_granted") { toast("Claude features are switched off for this page. Turn them on from the page's permissions."); return; }
+  if (c === "rate_limited") { toast("Claude is busy. Wait a minute and try again."); return; }
+  toast("Claude couldn't finish that. Try again.");
+  console.error(e);
+}
+const STYLE = "Write casually and specifically, like a smart creator friend. No em dashes. No hashtags unless asked. Never invent statistics: only cite numbers that appear in the data.";
+const stamp = () => new Date().toLocaleString(undefined, {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+
+$("#planBtn").addEventListener("click", async () => {
+  if (!S.sample) return;
+  const btn = $("#planBtn"); busy("plan", btn, true, "Planning…");
+  $("#planOut").innerHTML = `<div class="empty"><span class="spinner"></span> Claude is looking at your posts and planning your week…</div>`;
+  const prompt = `${PROFILE}
+You are her content strategist. Plan what she should film this week (week starting ${TODAY}).
+
+Her logged post data:
+${statsSummary()}
+
+Ideas already in her idea bank (do not repeat): ${S.ideas.slice(0,40).map(i => i.title).join("; ") || "none"}
+
+If there are fewer than 6 posts, say plainly in the summary that the plan is a starter plan based on her niche, and use pillar names for rising/slipping as best guesses labeled as such in the note.
+${STYLE}
+
+Reply with only JSON in exactly this shape:
+{"summary":"2 sentences on what the data says","rising":{"pillar":"one of Gym|Everyday life|GRWM|Outfits","note":"1 sentence why"},"slipping":{"pillar":"...","note":"1 sentence"},"bestHook":{"hook":"a hook line to reuse, from her posts if available","why":"1 sentence"},"tryNext":"one specific experiment","ideas":[{"title":"","hook":"opening line","pillar":"Gym|Everyday life|GRWM|Outfits","platform":"TikTok|Instagram|Both","format":"e.g. POV, GRWM voiceover, transition, carousel","why":"1 sentence"}],"week":[{"day":"Mon","pillar":"","idea":"what to film","note":"short tip"}]}
+ideas must have exactly 3 items. week must have 7 items, Mon to Sun, mixing her four pillars, with at least one lighter day.`;
+  try {
+    const r = await S.sample.json(prompt, {modelTier:"default", cache:false});
+    r.at = stamp(); S.busy.plan = false;
+    await Store.setDoc("plan", r);
+    S.plan = r; renderPlan(); renderToday();
+  } catch (e) { S.busy.plan = false; renderPlan(); aiError(e); }
+  busy("plan", btn, false);
+});
+
+$("#ideasBtn").addEventListener("click", async () => {
+  if (!S.sample) return;
+  const btn = $("#ideasBtn"); busy("ideas", btn, true, "Thinking…");
+  const prompt = `${PROFILE}
+Give her 10 fresh, ready-to-film content ideas built on what is working in her data.
+
+${statsSummary()}
+
+Already in her idea bank (do not repeat): ${S.ideas.slice(0,60).map(i => i.title).join("; ") || "none"}
+Spread ideas across her pillars, weighted toward whatever performs best. Each idea must be concrete enough to film today.
+${STYLE}
+Reply with only JSON: {"ideas":[{"title":"","hook":"exact opening line","pillar":"Gym|Everyday life|GRWM|Outfits","why":"1 sentence tied to her data or niche"}]}`;
+  try {
+    const r = await S.sample.json(prompt, {modelTier:"default", cache:false});
+    const list = (r.ideas||[]).slice(0,10);
+    const t = Date.now();
+    list.forEach((i,ix) => Store.put("ideas", uid(), {title:String(i.title||""), hook:String(i.hook||""), pillar:PILLARS.includes(i.pillar)?i.pillar:"Other", why:String(i.why||""), status:"idea", createdAt:t+ix}));
+    toast(`Added ${list.length} ideas.`);
+    S.filter = "All";
+  } catch (e) { aiError(e); }
+  busy("ideas", btn, false);
+});
+
+$("#briefBtn").addEventListener("click", async () => {
+  if (!S.sample) return;
+  const btn = $("#briefBtn"); busy("brief", btn, true, "Writing…");
+  $("#briefOut").innerHTML = `<p class="muted small"><span class="spinner"></span> Writing your brief…</p>`;
+  const dn = DAYS[now.getDay()];
+  const planned = S.plan?.week?.find(d => (d.day||"").slice(0,3) === dn);
+  const prompt = `${PROFILE}
+Write her morning brief for ${now.toDateString()}.
+
+Today's to-dos (time, text, done?):
+${(S.day.tasks||[]).map(t => `- ${t.time||"anytime"} | ${t.text} | ${t.done?"done":"open"}`).join("\n") || "none added"}
+Training today: ${S.day.training || "not set"}
+Content plan slot for today: ${planned ? `${planned.pillar}: ${planned.idea}` : "none"}
+Top unfilmed ideas in her bank: ${S.ideas.filter(i => (i.status||"idea")==="idea").slice(0,8).map(i => `${i.title} (${i.pillar})`).join("; ") || "none"}
+Posts logged: ${S.posts.length}
+
+Prioritize anything time-sensitive or money-related (brand deals, deadlines) first. If training is set, suggest a way to film gym content during the session. Keep each field to 1-2 sentences.
+${STYLE}
+Reply with only JSON: {"headline":"one upbeat line naming the day's main focus","doFirst":"","filmToday":"","training":"tip linking training and content, or empty string","watchout":"one risk or thing not to forget, or empty string"}`;
+  try {
+    const r = await S.sample.json(prompt, {modelTier:"quick", cache:false});
+    r.at = new Date().toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit"});
+    S.day.brief = r; S.busy.brief = false; renderToday(); saveDay();
+  } catch (e) { S.busy.brief = false; $("#briefOut").innerHTML = `<p class="muted small">Tap Write my brief to try again.</p>`; aiError(e); }
+  busy("brief", btn, false);
+});
+
+$("#shotInput").addEventListener("change", async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if (!files.length || !S.sample) return;
+  const st = $("#shotStatus");
+  try {
+    const lim = await S.sample.limits();
+    if (!lim.images) { toast("Screenshot reading isn't available here. Type the numbers in instead."); return; }
+    const use = files.slice(0, lim.images.maxCount || 5);
+    st.innerHTML = `<span class="spinner"></span> Reading ${use.length} screenshot${use.length>1?"s":""}…`;
+    const prompt = `These are screenshots from TikTok or Instagram showing post analytics or post pages for creator @sophiavega5 (TikTok) / @ssophiavega (Instagram).
+Extract every distinct post you can see. For each, read: platform, date posted (YYYY-MM-DD, assume year ${now.getFullYear()} if not shown, empty string if unknown), caption or on-screen hook text, views (or plays), likes, comments, saves (bookmarks/favorites), shares.
+Convert abbreviations like 1.2K to 1200 and 3.4M to 3400000. Use null for any number not visible. Do not guess numbers.
+Also guess the content pillar from the caption or thumbnail: one of Gym, Everyday life, GRWM, Outfits, Other.
+Reply with only JSON: {"posts":[{"platform":"tiktok|instagram","date":"","hook":"","views":null,"likes":null,"comments":null,"saves":null,"shares":null,"pillar":""}]}`;
+    const r = await S.sample.json(prompt, {images:use, modelTier:"default", cache:false});
+    const got = (r.posts||[]).map(p => ({...p, _id:uid(), _fromShot:true, platform:p.platform==="instagram"?"instagram":"tiktok", pillar:PILLARS.includes(p.pillar)?p.pillar:"Other"}));
+    st.textContent = got.length ? `Found ${got.length} post${got.length>1?"s":""}. Check and save below.` : "Couldn't find post numbers in that screenshot. Try the Insights screen.";
+    S.drafts = [...got, ...S.drafts]; renderDrafts();
+  } catch (err) { st.textContent = ""; aiError(err); }
+});
+
+/* ---------- boot ---------- */
+function renderAll(){ renderToday(); renderPlan(); renderPosts(); renderIdeas(); }
+renderAll();
+
+function subscribe(){
+  Store.watchColl("posts", list => { S.posts = list; renderPosts(); renderPlan(); });
+  Store.watchColl("ideas", list => { S.ideas = list; renderIdeas(); });
+  Store.watchDoc("plan", d => { S.plan = d; renderPlan(); renderToday(); });
+  Store.watchDoc("day-"+TODAY, d => { if (d) { S.day = {tasks:[], training:"", brief:null, ...d}; renderToday(); } });
+}
+const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+
+(async () => {
+  const C = window.claude;
+  let db = null, user = null, sample = null;
+  if (C && C.use) {
+    [db, user, sample] = await Promise.all([
+      withTimeout(C.use("db").catch(() => null), 10000),
+      withTimeout(C.use("user").catch(() => null), 10000),
+      withTimeout(C.use("sample").catch(() => null), 10000)
+    ]);
+  }
+  let id = null;
+  if (db && user) { try { id = await user.id(); } catch {} }
+  if (db && id) Store.remote(db, id);
+  setMode(Store.mode);
+  S.sample = sample;
+  if (!sample) document.querySelectorAll(".ai, .ai-only").forEach(el => { el.hidden = true; });
+  subscribe();
+})();
+})();
+</script>
