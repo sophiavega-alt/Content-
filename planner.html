@@ -1,0 +1,558 @@
+<title>Reel &amp; TikTok Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky top bar + stats strip, then one working view at a time (calendar / board / ideas); editor slides in as a side sheet. */
+:root {
+  --bg: #f5f4f7;
+  --surface: #ffffff;
+  --sunken: #ecebf0;
+  --fg: #1c1a22;
+  --muted: #6b6878;
+  --line: #dddbe4;
+  --rec: #e5484d;          /* record-button red: the one accent */
+  --rec-soft: #fde8e8;
+  --tt: #0f9fb0;           /* TikTok chip */
+  --tt-soft: #def4f6;
+  --ig: #c2378a;           /* Instagram chip */
+  --ig-soft: #f9e3f0;
+  --ok: #2f8a4c;
+  --ok-soft: #e1f2e6;
+  --warn: #a8660b;
+  --warn-soft: #fbefd9;
+  --shadow: 0 10px 30px rgba(28, 26, 34, .14);
+  --f-display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131217; --surface: #1c1b22; --sunken: #24232b; --fg: #eeedf2; --muted: #9b98a8; --line: #33313c;
+    --rec: #ff6369; --rec-soft: #3a1d20; --tt: #3fc7d6; --tt-soft: #13343a; --ig: #ec6bb6; --ig-soft: #3a1a2f;
+    --ok: #5cc27c; --ok-soft: #173023; --warn: #e5a43f; --warn-soft: #3a2a12; --shadow: 0 10px 30px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131217; --surface: #1c1b22; --sunken: #24232b; --fg: #eeedf2; --muted: #9b98a8; --line: #33313c;
+  --rec: #ff6369; --rec-soft: #3a1d20; --tt: #3fc7d6; --tt-soft: #13343a; --ig: #ec6bb6; --ig-soft: #3a1a2f;
+  --ok: #5cc27c; --ok-soft: #173023; --warn: #e5a43f; --warn-soft: #3a2a12; --shadow: 0 10px 30px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--rec); outline-offset: 2px; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1280px; margin: 0 auto; }
+
+/* Top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 12px; padding-block: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--rec); box-shadow: 0 0 0 4px var(--rec-soft); }
+.brand h1 { font-family: var(--f-display); font-weight: 700; font-size: 20px; margin: 0; letter-spacing: -.01em; }
+.seg { display: inline-flex; background: var(--sunken); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 999px; color: var(--muted); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 8px; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--rec); border-color: var(--rec); color: #fff; font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.danger { color: var(--rec); }
+
+/* Stats strip */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding-block: 16px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; min-width: 0; }
+.stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.stat .v { font-family: var(--f-display); font-size: 24px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.stat .s { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mix { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--sunken); margin-top: 8px; }
+.mix span { display: block; height: 100%; }
+
+/* Toolbar */
+.bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 12px; }
+.bar h2 { font-family: var(--f-display); font-size: 22px; margin: 0; min-width: 9ch; font-weight: 700; }
+.bar .spacer { flex: 1; }
+.notice { font-size: 12px; color: var(--muted); }
+
+/* Chips */
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.chip.tiktok { background: var(--tt-soft); color: var(--tt); }
+.chip.instagram { background: var(--ig-soft); color: var(--ig); }
+.status { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: var(--sunken); color: var(--muted); white-space: nowrap; }
+.status.scheduled { background: var(--warn-soft); color: var(--warn); }
+.status.posted { background: var(--ok-soft); color: var(--ok); }
+.status.editing, .status.filming { background: var(--rec-soft); color: var(--rec); }
+
+/* Calendar */
+.cal { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--line); display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
+.wd { background: var(--sunken); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 6px 8px; }
+.day { background: var(--surface); min-height: 112px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 0; cursor: pointer; }
+.day.out { background: var(--bg); }
+.day.out .num { opacity: .45; }
+.day:hover .add { opacity: 1; }
+.day .head { display: flex; align-items: center; justify-content: space-between; }
+.num { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.day.today .num { background: var(--rec); color: #fff; border-radius: 999px; padding: 0 7px; }
+.add { opacity: 0; border: 0; background: transparent; color: var(--muted); font-size: 16px; line-height: 1; padding: 0 4px; }
+.post { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 4px 6px; font-size: 12px; min-width: 0; }
+.post:hover { border-color: var(--muted); }
+.post.tiktok { border-left: 3px solid var(--tt); }
+.post.instagram { border-left: 3px solid var(--ig); }
+.post.both { border-left: 3px solid var(--rec); }
+.post .t { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.post .m { display: flex; gap: 6px; align-items: center; color: var(--muted); font-family: var(--f-mono); font-size: 10.5px; }
+.post.done .t { color: var(--muted); }
+.dname { display: none; }
+
+/* Board */
+.board-scroll { overflow-x: auto; padding-bottom: 8px; }
+.board { display: grid; grid-template-columns: repeat(6, minmax(220px, 1fr)); gap: 12px; min-width: 1100px; }
+.col { background: var(--sunken); border-radius: var(--r); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 240px; }
+.col.over { outline: 2px dashed var(--rec); outline-offset: -2px; }
+.col h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; justify-content: space-between; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; cursor: grab; text-align: left; }
+.card:hover { border-color: var(--muted); }
+.card .t { font-weight: 600; }
+.card .hook { color: var(--muted); font-size: 12.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.card .when { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+.next { border: 0; background: var(--sunken); border-radius: 6px; font-size: 11px; padding: 2px 8px; color: var(--muted); }
+.next:hover { color: var(--fg); }
+.empty-col { color: var(--muted); font-size: 12px; text-align: center; padding: 16px 4px; }
+
+/* Ideas */
+.quick { display: flex; gap: 8px; margin-bottom: 14px; }
+.quick input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.idea { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.idea .t { font-weight: 600; cursor: pointer; }
+.idea .actions { display: flex; gap: 6px; margin-top: auto; padding-top: 4px; }
+.pillar { font-size: 11px; color: var(--muted); }
+
+.blank { text-align: center; padding: 48px 16px; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r); }
+.blank strong { display: block; color: var(--fg); font-family: var(--f-display); font-size: 18px; margin-bottom: 4px; }
+
+/* Editor sheet */
+.scrim { position: fixed; inset: 0; background: rgba(10, 8, 16, .4); z-index: 20; }
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--surface); z-index: 21; box-shadow: var(--shadow); display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.sheet header { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.sheet header h2 { margin: 0 auto 0 0; font-family: var(--f-display); font-size: 18px; }
+.sheet form { overflow-y: auto; padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.sheet footer { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); align-items: center; }
+.sheet footer .spacer { flex: 1; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field > span, .legend { font-size: 12px; font-weight: 600; color: var(--muted); }
+.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+.field textarea { resize: vertical; min-height: 70px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.counter { font-family: var(--f-mono); font-size: 11px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.counter .over { color: var(--rec); }
+.toggles { display: flex; gap: 8px; flex-wrap: wrap; }
+.toggles label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+.toggles input { accent-color: var(--rec); }
+.section-label { font-family: var(--f-display); font-size: 14px; font-weight: 700; margin-top: 4px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; z-index: 30; font-weight: 500; }
+
+@media (max-width: 760px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cal { display: flex; flex-direction: column; background: transparent; border: 0; gap: 8px; }
+  .wd, .day.out { display: none; }
+  .day { min-height: 0; border: 1px solid var(--line); border-radius: var(--r); }
+  .day:not(.has):not(.today) { display: none; }
+  .dname { display: inline; font-weight: 600; color: var(--fg); margin-left: 6px; font-family: var(--f-body); }
+  .add { opacity: 1; }
+  .grid5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: slide .18s ease-out; }
+  @keyframes slide { from { transform: translateX(24px); opacity: .6; } }
+}
+</style>
+
+<div class="top">
+  <div class="wrap">
+    <div class="brand"><span class="dot" aria-hidden="true"></span><h1>Reel &amp; TikTok Planner</h1></div>
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" data-view="calendar" aria-pressed="true">Calendar</button>
+      <button type="button" data-view="board" aria-pressed="false">Production</button>
+      <button type="button" data-view="ideas" aria-pressed="false">Ideas</button>
+    </div>
+    <div class="seg" role="group" aria-label="Platform filter">
+      <button type="button" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" data-filter="tiktok" aria-pressed="false">TikTok</button>
+      <button type="button" data-filter="instagram" aria-pressed="false">Instagram</button>
+    </div>
+    <button type="button" class="btn primary" id="newBtn">+ New post</button>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="stats" id="stats" aria-label="Summary"></section>
+  <section id="view"></section>
+  <p class="notice" id="saveMode"></p>
+</main>
+
+<div id="sheetRoot" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const STATUSES = [
+    ["idea", "Idea"], ["scripted", "Scripted"], ["filming", "Filming"],
+    ["editing", "Editing"], ["scheduled", "Scheduled"], ["posted", "Posted"]
+  ];
+  const FORMATS = ["Short video", "Carousel", "Photo", "Story", "Live"];
+  const LIMITS = { tiktok: 4000, instagram: 2200, igTags: 5 };
+  const LS_KEY = "reel-tiktok-planner/posts";
+  const UI_KEY = "reel-tiktok-planner/ui";
+
+  const state = { posts: new Map(), view: "calendar", filter: "all", month: startOfMonth(new Date()), loaded: false };
+  try { Object.assign(state, JSON.parse(localStorage.getItem(UI_KEY) || "{}")); state.month = startOfMonth(new Date()); } catch {}
+
+  // ---------- storage: shared db when the viewer serves it, otherwise this browser ----------
+  const store = {
+    mode: "local", col: null,
+    loadLocal() {
+      try { const arr = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); arr.forEach(p => state.posts.set(p.id, p)); } catch {}
+    },
+    saveLocal() {
+      try { localStorage.setItem(LS_KEY, JSON.stringify([...state.posts.values()])); } catch {}
+    },
+    async save(post) {
+      post.updatedAt = new Date().toISOString();
+      state.posts.set(post.id, post);
+      render();
+      if (this.mode === "db") {
+        const { id, ...body } = post;
+        try { await this.col.doc(id).set(body); } catch (e) { toast(writeError(e)); }
+      } else this.saveLocal();
+    },
+    async remove(id) {
+      state.posts.delete(id);
+      render();
+      if (this.mode === "db") { try { await this.col.doc(id).delete(); } catch (e) { toast(writeError(e)); } }
+      else this.saveLocal();
+    }
+  };
+  function writeError(e) {
+    if (e && e.code === "permission_denied") return "You can view this planner but not change it.";
+    if (e && e.code === "quota_exceeded") return "The planner is full. Delete old posts to make room.";
+    return "Couldn't save that change. Check your connection and try again.";
+  }
+
+  async function connect() {
+    let db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch { db = null; }
+    if (!db) {
+      store.loadLocal(); state.loaded = true;
+      $("#saveMode").textContent = "Saved in this browser only.";
+      render(); return;
+    }
+    store.mode = "db"; store.col = db.collection("posts");
+    $("#saveMode").textContent = "Loading your plan…";
+    const timer = setTimeout(() => {
+      if (!state.loaded) { state.loaded = true; $("#saveMode").textContent = "Still connecting. Your posts will appear when the planner is reachable."; render(); }
+    }, 10000);
+    store.col.onSnapshot(snap => {
+      clearTimeout(timer);
+      state.posts.clear();
+      snap.docs.forEach(d => { if (d.exists) state.posts.set(d.id, { id: d.id, ...d.data() }); });
+      state.loaded = true;
+      $("#saveMode").textContent = "Saved to your planner automatically.";
+      render();
+    }, err => {
+      clearTimeout(timer); state.loaded = true;
+      $("#saveMode").textContent = err && err.code === "revoked" ? "Access to this planner changed. Reload to continue." : "Couldn't reach the planner. Changes may not save.";
+      render();
+    });
+  }
+
+  // ---------- helpers ----------
+  function $(s, r = document) { return r.querySelector(s); }
+  function el(tag, attrs = {}, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else if (k === "text") n.textContent = v;
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    kids.flat().forEach(c => c != null && n.append(c.nodeType ? c : document.createTextNode(c)));
+    return n;
+  }
+  function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function parseISO(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+  function uid() { return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g, ""); }
+  function fmtDate(s) { return s ? parseISO(s).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) : "No date"; }
+  function compact(n) { return n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M" : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, "") + "k" : String(Math.round(n)); }
+  function platClass(p) { const ps = p.platforms || []; return ps.length > 1 ? "both" : ps[0] || ""; }
+  function platChips(p) { return (p.platforms || []).map(x => el("span", { class: "chip " + x, text: x === "tiktok" ? "TikTok" : "Instagram" })); }
+  function statusLabel(s) { return (STATUSES.find(x => x[0] === s) || STATUSES[0])[1]; }
+  function visible() {
+    return [...state.posts.values()].filter(p => state.filter === "all" || (p.platforms || []).includes(state.filter));
+  }
+  function persistUI() { try { localStorage.setItem(UI_KEY, JSON.stringify({ view: state.view, filter: state.filter })); } catch {} }
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+  function countTags(s) { return (String(s || "").match(/#[^\s#]+/g) || []).length; }
+
+  // ---------- render ----------
+  function render() {
+    document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.view));
+    document.querySelectorAll("[data-filter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === state.filter));
+    renderStats();
+    const v = $("#view"); v.replaceChildren();
+    if (!state.loaded) { v.append(el("div", { class: "blank" }, el("strong", { text: "Loading your plan" }), "Your scheduled posts and ideas will show up here.")); return; }
+    if (state.view === "calendar") renderCalendar(v);
+    else if (state.view === "board") renderBoard(v);
+    else renderIdeas(v);
+  }
+
+  function renderStats() {
+    const posts = visible();
+    const today = iso(new Date());
+    const now = new Date();
+    const mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    const inWeek = posts.filter(p => p.date && p.date >= iso(mon) && p.date <= iso(sun) && p.status !== "idea");
+    const upcoming = posts.filter(p => p.date && p.date >= today && p.status !== "posted" && p.status !== "idea")
+      .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+    const next = upcoming[0];
+    const tt = inWeek.filter(p => (p.platforms || []).includes("tiktok")).length;
+    const ig = inWeek.filter(p => (p.platforms || []).includes("instagram")).length;
+    const pipeline = posts.filter(p => ["scripted", "filming", "editing"].includes(p.status)).length;
+    const ideas = posts.filter(p => p.status === "idea").length;
+    const monthKey = iso(now).slice(0, 7);
+    const posted = posts.filter(p => p.status === "posted" && (p.date || "").startsWith(monthKey));
+    const views = posted.reduce((s, p) => s + (+(p.stats && p.stats.views) || 0), 0);
+
+    const mixTotal = tt + ig || 1;
+    const s = $("#stats"); s.replaceChildren(
+      el("div", { class: "stat" }, el("div", { class: "k", text: "Next up" }),
+        el("div", { class: "v", style: "font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap", text: next ? next.title || "Untitled" : "Nothing scheduled" }),
+        el("div", { class: "s", text: next ? fmtDate(next.date) + (next.time ? " · " + next.time : "") : "Add a date to a post to see it here" })),
+      el("div", { class: "stat" }, el("div", { class: "k", text: "This week" }),
+        el("div", { class: "v", text: inWeek.length + " posts" }),
+        el("div", { class: "s", text: tt + " TikTok · " + ig + " Instagram" }),
+        el("div", { class: "mix", "aria-hidden": "true" },
+          el("span", { style: `width:${tt / mixTotal * 100}%;background:var(--tt)` }),
+          el("span", { style: `width:${ig / mixTotal * 100}%;background:var(--ig)` }))),
+      el("div", { class: "stat" }, el("div", { class: "k", text: "In production" }),
+        el("div", { class: "v", text: String(pipeline) }),
+        el("div", { class: "s", text: ideas + (ideas === 1 ? " idea" : " ideas") + " waiting" })),
+      el("div", { class: "stat" }, el("div", { class: "k", text: "Posted this month" }),
+        el("div", { class: "v", text: String(posted.length) }),
+        el("div", { class: "s", text: posted.length ? compact(views) + " views total" : "Log views after posting" }))
+    );
+  }
+
+  function renderCalendar(v) {
+    const m = state.month;
+    const label = m.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    v.append(el("div", { class: "bar" },
+      el("button", { class: "btn", type: "button", "aria-label": "Previous month", onclick: () => { state.month = new Date(m.getFullYear(), m.getMonth() - 1, 1); render(); } }, "←"),
+      el("h2", { text: label }),
+      el("button", { class: "btn", type: "button", "aria-label": "Next month", onclick: () => { state.month = new Date(m.getFullYear(), m.getMonth() + 1, 1); render(); } }, "→"),
+      el("button", { class: "btn ghost", type: "button", onclick: () => { state.month = startOfMonth(new Date()); render(); } }, "Today"),
+      el("span", { class: "spacer" }),
+      el("span", { class: "notice", text: "Click a day to plan a post." })));
+
+    const byDate = {};
+    visible().filter(p => p.date && p.status !== "idea").forEach(p => (byDate[p.date] ||= []).push(p));
+    Object.values(byDate).forEach(a => a.sort((x, y) => (x.time || "99").localeCompare(y.time || "99")));
+
+    const cal = el("div", { class: "cal" });
+    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(d => cal.append(el("div", { class: "wd", text: d })));
+    const start = new Date(m); start.setDate(1 - ((m.getDay() + 6) % 7));
+    const today = iso(new Date());
+    let any = false;
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      if (i % 7 === 0 && i >= 28 && d.getMonth() !== m.getMonth()) break;
+      const key = iso(d), items = byDate[key] || [];
+      const out = d.getMonth() !== m.getMonth();
+      if (items.length && !out) any = true;
+      const cell = el("div", { class: "day" + (out ? " out" : "") + (key === today ? " today" : "") + (items.length ? " has" : ""),
+        onclick: e => { if (e.target === cell || e.target.closest(".head")) openEditor(null, { date: key, status: "scheduled" }); } },
+        el("div", { class: "head" },
+          el("span", { class: "num" }, String(d.getDate()), el("span", { class: "dname", text: d.toLocaleDateString(undefined, { weekday: "long", month: "short" }) })),
+          el("button", { class: "add", type: "button", "aria-label": "Add post on " + fmtDate(key), text: "+" })),
+        items.map(p => el("button", { type: "button", class: "post " + platClass(p) + (p.status === "posted" ? " done" : ""), onclick: e => { e.stopPropagation(); openEditor(p); } },
+          el("span", { class: "t", text: (p.status === "posted" ? "✓ " : "") + (p.title || "Untitled") }),
+          el("span", { class: "m" }, p.time || "—", p.format ? " · " + p.format : "")))
+      );
+      cal.append(cell);
+    }
+    v.append(cal);
+    if (!any) v.append(el("div", { class: "blank", style: "margin-top:12px" },
+      el("strong", { text: "Nothing planned for " + label }),
+      "Pick a day above, or schedule something from your Ideas."));
+  }
+
+  function renderBoard(v) {
+    v.append(el("div", { class: "bar" }, el("h2", { text: "Production" }), el("span", { class: "spacer" }),
+      el("span", { class: "notice", text: "Drag cards between stages, or use the arrow on a card." })));
+    const scroll = el("div", { class: "board-scroll" }), board = el("div", { class: "board" });
+    const posts = visible();
+    STATUSES.forEach(([key, label], idx) => {
+      const items = posts.filter(p => (p.status || "idea") === key)
+        .sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999") || (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      const col = el("div", { class: "col",
+        ondragover: e => { e.preventDefault(); col.classList.add("over"); },
+        ondragleave: () => col.classList.remove("over"),
+        ondrop: e => { e.preventDefault(); col.classList.remove("over"); const p = state.posts.get(e.dataTransfer.getData("text/plain")); if (p && p.status !== key) store.save({ ...p, status: key }); } },
+        el("h3", {}, el("span", { text: label }), el("span", { text: String(items.length) })));
+      if (!items.length) col.append(el("div", { class: "empty-col", text: "Nothing here" }));
+      items.forEach(p => {
+        const nextStatus = STATUSES[idx + 1];
+        col.append(el("div", { class: "card", draggable: "true", tabindex: "0", role: "button",
+          ondragstart: e => e.dataTransfer.setData("text/plain", p.id),
+          onclick: () => openEditor(p), onkeydown: e => { if (e.key === "Enter") openEditor(p); } },
+          el("span", { class: "t", text: p.title || "Untitled" }),
+          p.hook ? el("span", { class: "hook", text: "“" + p.hook + "”" }) : null,
+          el("div", { class: "row" }, platChips(p), el("span", { class: "when", text: p.date ? fmtDate(p.date) : "" })),
+          nextStatus ? el("div", { class: "row" }, el("button", { class: "next", type: "button", onclick: e => { e.stopPropagation(); store.save({ ...p, status: nextStatus[0] }); toast("Moved to " + nextStatus[1]); } }, "→ " + nextStatus[1])) : null
+        ));
+      });
+      board.append(col);
+    });
+    scroll.append(board); v.append(scroll);
+  }
+
+  function renderIdeas(v) {
+    const ideas = visible().filter(p => p.status === "idea").sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    v.append(el("div", { class: "bar" }, el("h2", { text: "Ideas" }), el("span", { class: "notice", text: ideas.length + " saved" })));
+    const input = el("input", { id: "quickIdea", placeholder: "Got an idea? Type it and press Enter", "aria-label": "New idea", maxlength: "200" });
+    const add = () => {
+      const t = input.value.trim(); if (!t) return;
+      const plats = state.filter === "all" ? ["tiktok", "instagram"] : [state.filter];
+      store.save({ id: uid(), title: t, status: "idea", platforms: plats, format: "Short video", createdAt: new Date().toISOString() });
+      input.value = ""; input.focus(); toast("Idea saved");
+    };
+    input.addEventListener("keydown", e => { if (e.key === "Enter") add(); });
+    v.append(el("div", { class: "quick" }, input, el("button", { class: "btn primary", type: "button", onclick: add }, "Save idea")));
+    if (!ideas.length) { v.append(el("div", { class: "blank" }, el("strong", { text: "No ideas yet" }), "Jot down trends, hooks and sounds as they come to you. Turn them into posts when you're ready.")); return; }
+    const grid = el("div", { class: "ideas" });
+    ideas.forEach(p => grid.append(el("div", { class: "idea" },
+      el("div", { class: "row", style: "display:flex;gap:6px;flex-wrap:wrap" }, platChips(p), p.pillar ? el("span", { class: "pillar", text: p.pillar }) : null),
+      el("span", { class: "t", role: "button", tabindex: "0", onclick: () => openEditor(p), onkeydown: e => { if (e.key === "Enter") openEditor(p); }, text: p.title || "Untitled" }),
+      p.hook ? el("span", { class: "pillar", text: "Hook: " + p.hook }) : null,
+      p.sound ? el("span", { class: "pillar", text: "Sound: " + p.sound }) : null,
+      el("div", { class: "actions" },
+        el("button", { class: "btn", type: "button", onclick: () => { store.save({ ...p, status: "scripted" }); toast("Moved to Scripted"); } }, "Start scripting"),
+        el("button", { class: "btn ghost", type: "button", onclick: () => openEditor(p, { status: "scheduled" }) }, "Schedule…"))
+    )));
+    v.append(grid);
+  }
+
+  // ---------- editor ----------
+  function openEditor(post, preset = {}) {
+    const isNew = !post;
+    const p = { id: uid(), title: "", platforms: state.filter === "all" ? ["tiktok", "instagram"] : [state.filter], format: "Short video", status: "idea", date: "", time: "",
+      pillar: "", hook: "", caption: "", hashtags: "", sound: "", notes: "", stats: {}, createdAt: new Date().toISOString(), ...(post || {}), ...preset };
+    p.stats = { ...(p.stats || {}) };
+    const pillars = [...new Set([...state.posts.values()].map(x => x.pillar).filter(Boolean))];
+    const root = $("#sheetRoot"); root.replaceChildren(); root.hidden = false;
+    const close = () => { root.hidden = true; root.replaceChildren(); document.removeEventListener("keydown", onKey); };
+    const onKey = e => { if (e.key === "Escape") close(); };
+    document.addEventListener("keydown", onKey);
+
+    const f = (id, label, input) => el("label", { class: "field", for: id }, el("span", { text: label }), input);
+    const inp = (id, val, attrs = {}) => el("input", { id, value: val || "", ...attrs });
+    const ta = (id, val, attrs = {}) => { const t = el("textarea", { id, ...attrs }); t.value = val || ""; return t; };
+    const sel = (id, val, opts) => { const s = el("select", { id }, opts.map(o => el("option", { value: o[0] }, o[1]))); s.value = val; return s; };
+
+    const counter = el("div", { class: "counter", "aria-live": "polite" });
+    const form = el("form", { id: "postForm", onsubmit: e => { e.preventDefault(); submit(); } },
+      f("pTitle", "Working title", inp("pTitle", p.title, { placeholder: "e.g. 3 ways to style one blazer", required: true, maxlength: "140" })),
+      el("div", {}, el("div", { class: "legend", style: "margin-bottom:6px" , text: "Post to" }),
+        el("div", { class: "toggles" },
+          el("label", {}, el("input", { type: "checkbox", id: "pTT", checked: p.platforms.includes("tiktok") }), "TikTok"),
+          el("label", {}, el("input", { type: "checkbox", id: "pIG", checked: p.platforms.includes("instagram") }), "Instagram"))),
+      el("div", { class: "grid2" },
+        f("pFormat", "Format", sel("pFormat", p.format, FORMATS.map(x => [x, x]))),
+        f("pStatus", "Stage", sel("pStatus", p.status, STATUSES))),
+      el("div", { class: "grid2" },
+        f("pDate", "Post date", inp("pDate", p.date, { type: "date" })),
+        f("pTime", "Time", inp("pTime", p.time, { type: "time" }))),
+      f("pPillar", "Content pillar", el("span", {}, inp("pPillar", p.pillar, { list: "pillarList", placeholder: "e.g. Outfits, Day in my life, Tips" }),
+        el("datalist", { id: "pillarList" }, pillars.map(x => el("option", { value: x }))))),
+      f("pHook", "Hook (first 3 seconds)", inp("pHook", p.hook, { placeholder: "What you say or show to stop the scroll" })),
+      f("pSound", "Sound / audio", inp("pSound", p.sound, { placeholder: "Trending sound, original audio, voiceover…" })),
+      f("pCaption", "Caption", ta("pCaption", p.caption, { rows: "4" })),
+      f("pTags", "Hashtags", inp("pTags", p.hashtags, { placeholder: "#fyp #ootd" })),
+      counter,
+      f("pNotes", "Shot list & notes", ta("pNotes", p.notes, { rows: "3", placeholder: "Shots, outfit, location, props, on-screen text" })),
+      el("div", { class: "section-label", text: "Results (after posting)" }),
+      el("div", { class: "grid5" }, ["views", "likes", "comments", "saves", "shares"].map(k =>
+        f("s_" + k, k[0].toUpperCase() + k.slice(1), inp("s_" + k, p.stats[k] ?? "", { type: "number", min: "0", inputmode: "numeric" }))))
+    );
+
+    const updateCount = () => {
+      const len = (form.pCaption.value + (form.pTags.value ? " " + form.pTags.value : "")).length;
+      const tags = countTags(form.pCaption.value + " " + form.pTags.value);
+      const tt = form.pTT.checked, ig = form.pIG.checked;
+      counter.replaceChildren(
+        tt ? el("span", { class: len > LIMITS.tiktok ? "over" : "" , text: `TikTok ${len}/${LIMITS.tiktok}` }) : null,
+        ig ? el("span", { class: len > LIMITS.instagram ? "over" : "", text: `Instagram ${len}/${LIMITS.instagram}` }) : null,
+        el("span", { class: ig && tags > LIMITS.igTags ? "over" : "", text: `${tags} hashtag${tags === 1 ? "" : "s"}` + (ig ? ` (Instagram max ${LIMITS.igTags})` : "") }));
+    };
+    form.addEventListener("input", updateCount);
+
+    let confirmDel = false;
+    const delBtn = isNew ? null : el("button", { class: "btn danger", type: "button", onclick: () => {
+      if (!confirmDel) { confirmDel = true; delBtn.textContent = "Click again to delete"; return; }
+      store.remove(p.id); close(); toast("Post deleted");
+    } }, "Delete");
+
+    function submit() {
+      const plats = [form.pTT.checked && "tiktok", form.pIG.checked && "instagram"].filter(Boolean);
+      if (!plats.length) { toast("Pick TikTok, Instagram or both"); return; }
+      const stats = {};
+      ["views", "likes", "comments", "saves", "shares"].forEach(k => { const v = form["s_" + k].value; if (v !== "") stats[k] = Math.max(0, +v); });
+      const out = { ...p, title: form.pTitle.value.trim(), platforms: plats, format: form.pFormat.value, status: form.pStatus.value,
+        date: form.pDate.value, time: form.pTime.value, pillar: form.pPillar.value.trim(), hook: form.pHook.value.trim(),
+        sound: form.pSound.value.trim(), caption: form.pCaption.value, hashtags: form.pTags.value.trim(), notes: form.pNotes.value, stats };
+      if (out.status === "scheduled" && !out.date) { toast("Add a post date to schedule it"); form.pDate.focus(); return; }
+      store.save(out); close(); toast(isNew ? "Post added" : "Changes saved");
+    }
+
+    root.append(
+      el("div", { class: "scrim", onclick: close }),
+      el("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-labelledby": "sheetTitle" },
+        el("header", {}, el("h2", { id: "sheetTitle", text: isNew ? "New post" : "Edit post" }),
+          el("button", { class: "btn ghost", type: "button", "aria-label": "Close", onclick: close }, "✕")),
+        form,
+        el("footer", {}, delBtn,
+          el("button", { class: "btn ghost", type: "button", onclick: async () => {
+            const text = [form.pCaption.value, form.pTags.value].filter(Boolean).join("\n\n");
+            try { await navigator.clipboard.writeText(text); toast("Caption copied"); } catch { form.pCaption.select(); toast("Press Ctrl+C / ⌘C to copy"); }
+          } }, "Copy caption"),
+          el("span", { class: "spacer" }),
+          el("button", { class: "btn", type: "button", onclick: close }, "Cancel"),
+          el("button", { class: "btn primary", type: "submit", form: "postForm" }, isNew ? "Add post" : "Save")))
+    );
+    updateCount();
+    setTimeout(() => form.pTitle.focus(), 30);
+  }
+
+  // ---------- wiring ----------
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { state.view = b.dataset.view; persistUI(); render(); }));
+  document.querySelectorAll("[data-filter]").forEach(b => b.addEventListener("click", () => { state.filter = b.dataset.filter; persistUI(); render(); }));
+  $("#newBtn").addEventListener("click", () => openEditor(null));
+
+  render();
+  connect();
+})();
+</script>
